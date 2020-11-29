@@ -52,7 +52,7 @@ jobs:
       uses: peaceiris/actions-gh-pages@v3
       with:
         deploy_key: ${{ secrets.ACTIONS_DEPLOY_KEY }}
-        publish_dir: ./target/x86_64-unknown-linux-gnu/release/output/
+        publish_dir: ./output/
         publish_branch: gh-pages  # deploying branch
         user_name: Dokkoo
         user_email: em@emsa.cf
