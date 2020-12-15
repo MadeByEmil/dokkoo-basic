@@ -1,4 +1,4 @@
-name: Build 'basic' Mokk
+name: Publish to GitHub Pages
 
 on: [push]
 
@@ -6,58 +6,56 @@ jobs:
   build:
 
     runs-on: ubuntu-latest
-    name: "Build"
+    name: "Publish"
 
     steps:
-    - uses: actions/checkout@v2
+    - name: Install Dokkoo
+      run: |
+        curl -s https://raw.githubusercontent.com/MadeByEmil/dokkoo/master/Cargo.toml --output Cargo.toml > /dev/null
+        version=$( awk -F ' = ' '$1 ~ /version/ { gsub(/[\"]/, "", $2); printf("%s",$2) }' Cargo.toml )
+        curl -s -L https://github.com/MadeByEmil/dokkoo/releases/download/v${version}/dokkoo_${version}_amd64.deb --output dokkoo_${version}_amd64.deb > /dev/null
+        sudo apt-get -qq install ./dokkoo_${version}_amd64.deb > /dev/null
+        printf "Installed Dokkoo v${version}"
+    - name: Checkout Mokk
+      uses: actions/checkout@v2
       with:
-        repository: 'MadeByEmil/dokkoo'
-#     - name: Setup Rust toolchain
-#       uses: actions-rs/toolchain@v1
-#       with:
-#          toolchain: nightly
-#          profile: minimal
-#         target: x86_64-unknown-linux-gnu
-#         override: true
-#         components: rust-src
-#     - name: Build Dokkoo binary
-#       uses: actions-rs/cargo@v1
-#       with:
-#         use-cross: true
-#         command: build
-#         args: --release --all-features --target x86_64-unknown-linux-gnu
-#     - name: Prepare Dokkoo binary
-#       run: |
-#         strip -v --strip-all ./target/x86_64-unknown-linux-gnu/release/dokkoo
-#         chmod +x ./target/x86_64-unknown-linux-gnu/release/dokkoo
+          path: ./mokk
+    - name: Checkout GitHub Pages environment
+      uses: actions/checkout@v2
+      with:
+          ref: gh-pages
+          path: ./gh-pages
+          token: ${{ secrets.GITHUB_TOKEN }}
     - name: Install 'grass' for Sass compilation
       uses: actions-rs/install@v0.1
       with:
           crate: grass
           use-tool-cache: true
-    - name: Install 'dokkoo' for Mokk compilation
-      uses: actions-rs/install@v0.1
-      with:
-          crate: dokkoo
-          use-tool-cache: true
-    - uses: actions/checkout@v2
-      with:
-        path: ./basic
-    - name: Build 'basic' Mokk
+    - name: Build
       run: |
-        cp -avr ./basic/* ./
-        rm -rf ./basic/
-        rm -rf ./output
-        dokkoo build .
-        mkdir -p ./output/_css/
-        grass ./sass/basic.scss > ./output/_css/basic.css
-        cp -avf ./robots.txt ./output
-    - name: Deploy
-      uses: peaceiris/actions-gh-pages@v3
-      with:
-        deploy_key: ${{ secrets.ACTIONS_DEPLOY_KEY }}
-        publish_dir: ./output/
-        publish_branch: gh-pages  # deploying branch
-        user_name: Dokkoo
-        user_email: em@emsa.cf
-        commit_message: "Building 'basic' Mokk"
+          sudo apt-get -qq install tree > /dev/null
+          printf "Files to build:\n" && tree ./mokk
+          find ./gh-pages -mindepth 1 ! -regex '^./gh-pages/.git\(/.*\)?' -delete
+          cd ./mokk
+          printf "\nBuilding … \n" && dokkoo build .
+          grass ./sass/basic.scss > ./output/_css/basic.css
+          cd ../
+          cp -ar ./mokk/output/* ./gh-pages
+          cp -ar ./mokk/assets/* ./gh-pages
+          touch ./gh-pages/.nojekyll
+          tee -a ./gh-pages/.nojekyll > /dev/null <<EOT
+
+          EOT
+          printf "\nFiles to publish:\n" && tree ./gh-pages
+    - name: Minimize
+      run: |
+        sudo apt-get -qq install minify > /dev/null
+        minify -r -o gh-pages/ gh-pages
+    - name: Publish
+      run: |
+          cd ./gh-pages
+          git config --global user.name 'Dokkoo'
+          git config --global user.email 'MadeByEmil@users.noreply.github.com'
+          git add -A
+          git diff --quiet && git diff --staged --quiet || git commit -am "Publish Mokk to GitHub Pages"
+          git push
