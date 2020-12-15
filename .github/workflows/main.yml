@@ -47,10 +47,6 @@ jobs:
 
           EOT
           printf "\nFiles to publish:\n" && tree ./gh-pages
-    - name: Minimize
-      run: |
-        sudo apt-get -qq install minify > /dev/null
-        minify -r -o gh-pages/ gh-pages
     - name: Publish
       run: |
           cd ./gh-pages
