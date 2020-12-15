@@ -8,7 +8,7 @@ layout: index
 <div class="content">
 <li>
 <h2>
-<li class="p_num">{{ forloop.rindex | append: "." }}</li>
+<li class="p_num">{{ forloop.index | append: "." }}</li>
 <a class="active"
 href="{{ post.url | prepend: global.baseurl }}">
 {{ post.document.frontmatter.title }}
