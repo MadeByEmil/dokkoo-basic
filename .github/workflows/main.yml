@@ -42,7 +42,6 @@ jobs:
           grass ./sass/basic.scss > ./output/_css/basic.css
           cd ../
           cp -ar ./mokk/output/* ./gh-pages
-          cp -ar ./mokk/assets/* ./gh-pages
           touch ./gh-pages/.nojekyll
           tee -a ./gh-pages/.nojekyll > /dev/null <<EOT
 
