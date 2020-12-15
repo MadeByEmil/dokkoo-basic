@@ -38,6 +38,7 @@ jobs:
           find ./gh-pages -mindepth 1 ! -regex '^./gh-pages/.git\(/.*\)?' -delete
           cd ./mokk
           printf "\nBuilding … \n" && dokkoo build .
+          mkdir -p ./output/_css/basic.css
           grass ./sass/basic.scss > ./output/_css/basic.css
           cd ../
           cp -ar ./mokk/output/* ./gh-pages
